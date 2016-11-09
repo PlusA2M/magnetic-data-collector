@@ -6,7 +6,6 @@
 //  Copyright © 2016年 plusa. All rights reserved.
 //
 
-// test Github by Alex
 
 import UIKit
 
