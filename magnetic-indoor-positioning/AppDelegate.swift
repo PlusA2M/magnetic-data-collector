@@ -2,8 +2,8 @@
 //  AppDelegate.swift
 //  magnetic-indoor-positioning
 //
-//  Created by meiinlam on 8/11/2016.
-//  Copyright © 2016年 plusa. All rights reserved.
+//  Created by PlusA2M on 8/11/2016.
+//  Copyright © 2016年 PlusA. All rights reserved.
 //
 
 import UIKit
