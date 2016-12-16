@@ -39,6 +39,14 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
     @IBOutlet weak var magneticFieldYProgress: UIProgressView!
     @IBOutlet weak var magneticFieldZProgress: UIProgressView!
     
+    
+    @IBOutlet weak var accelerometerXLabel: UILabel!
+    @IBOutlet weak var accelerometerYLabel: UILabel!
+    @IBOutlet weak var accelerometerZLabel: UILabel!
+    @IBOutlet weak var accelerometerXProgress: UIProgressView!
+    @IBOutlet weak var accelerometerYProgress: UIProgressView!
+    @IBOutlet weak var accelerometerZProgress: UIProgressView!
+    
     @IBOutlet var debugLabel: UILabel?
     
     override func viewDidLoad() {
@@ -77,9 +85,27 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
                 return
             }
             
+            self.motionManager.accelerometerUpdateInterval = 0.1
+            self.motionManager.startAccelerometerUpdates(to: OperationQueue.main) {
+                [weak self] (accelerometerData: CMAccelerometerData?, error: Error?) in
+                
+                let accelerometerX = Float((accelerometerData?.acceleration.x)!)
+                let accelerometerY = Float((accelerometerData?.acceleration.y)!)
+                let accelerometerZ = Float((accelerometerData?.acceleration.z)!)
+                
+                self?.accelerometerXLabel.text = "\(accelerometerX)"
+                self?.accelerometerYLabel.text = "\(accelerometerY)"
+                self?.accelerometerZLabel.text = "\(accelerometerZ)"
+                print("\(accelerometerData?.acceleration)")
+                
+                self?.accelerometerXProgress.setProgress(abs(accelerometerX), animated: true)
+                self?.accelerometerYProgress.setProgress(abs(accelerometerY), animated: true)
+                self?.accelerometerZProgress.setProgress(abs(accelerometerZ), animated: true)
+                
+            }
             
-            print("\(motion?.magneticField.accuracy.hashValue)")
-            print("\(motion?.magneticField.field)")
+//            print("\(motion?.magneticField.accuracy.hashValue)")
+//            print("\(motion?.magneticField.field)")
             
             let roll = CGFloat(attitude.roll)
             let pitch = CGFloat(attitude.pitch)
