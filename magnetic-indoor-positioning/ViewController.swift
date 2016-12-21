@@ -81,6 +81,8 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
             print("\(motion?.magneticField.accuracy.hashValue)")
             print("\(motion?.magneticField.field)")
             
+
+            
             let roll = CGFloat(attitude.roll)
             let pitch = CGFloat(attitude.pitch)
             let yaw = self.heading ?? 0 // Pitch (x), Roll (y), Yaw (z)
@@ -111,6 +113,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
             for label in self.labels ?? [] {
                 label.layer.transform = labelTransform
             }
+            
         }
     }
     
