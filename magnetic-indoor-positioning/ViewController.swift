@@ -10,6 +10,7 @@
 import UIKit
 import CoreLocation
 import CoreMotion
+import SQLite
 
 class ViewController: UIViewController, CLLocationManagerDelegate {
     
@@ -53,6 +54,33 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         super.viewDidLoad()
         
         self.locationManager.delegate = self
+        
+//        do {
+//
+//            let insert = data.insert(locx <- 0, locy <- 0, magx <- 0.1, magy <- 0.2, magz <- 0.3, time <- "2017-01-05 17:53:11")
+//            _ = try db.run(insert)
+//            
+//            for _ in try db.prepare(data) {
+//                print("id: \(data[locx]), locy: \(data[locy]), time: \(data[time])")
+//            }
+//             SELECT * FROM "users"
+//            
+//            let alice = users.filter(id == rowid)
+//            
+//            try db.run(alice.update(email <- email.replace("mac.com", with: "me.com")))
+//            // UPDATE "users" SET "email" = replace("email", 'mac.com', 'me.com')
+//            // WHERE ("id" = 1)
+//
+//            try db.run(alice.delete())
+//            // DELETE FROM "users" WHERE ("id" = 1)
+//            
+//            try db.scalar(data.count) // 0
+//            // SELECT count(*) FROM "users"
+//        } catch {
+//            print("anything")
+//        }
+        
+        
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -96,7 +124,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
                 self?.accelerometerXLabel.text = "\(accelerometerX)"
                 self?.accelerometerYLabel.text = "\(accelerometerY)"
                 self?.accelerometerZLabel.text = "\(accelerometerZ)"
-                print("\(accelerometerData?.acceleration)")
+//                print("\(accelerometerData?.acceleration)")
                 
                 self?.accelerometerXProgress.setProgress(abs(accelerometerX), animated: true)
                 self?.accelerometerYProgress.setProgress(abs(accelerometerY), animated: true)
