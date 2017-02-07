@@ -9,8 +9,8 @@
 /* Begin PBXBuildFile section */
 		0EF0AB371DD1E17B00990C89 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EF0AB361DD1E17B00990C89 /* AppDelegate.swift */; };
 		0EF0AB391DD1E17B00990C89 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EF0AB381DD1E17B00990C89 /* ViewController.swift */; };
+		0EF0AB3C1DD1E17B00990C89 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0EF0AB3A1DD1E17B00990C89 /* Main.storyboard */; };
 		0EF0AB3E1DD1E17B00990C89 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0EF0AB3D1DD1E17B00990C89 /* Assets.xcassets */; };
-		0EF0AB411DD1E17B00990C89 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0EF0AB3F1DD1E17B00990C89 /* LaunchScreen.storyboard */; };
 		FA5F201B1E1F7DBC0010C6C0 /* SQLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA5F200E1E1F7D650010C6C0 /* SQLite.framework */; };
 		FA5F201C1E1F7DBC0010C6C0 /* SQLite.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = FA5F200E1E1F7D650010C6C0 /* SQLite.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		FADAD62E1E1E4DA300F0E069 /* libsqlite3.0.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = FADAD62D1E1E4DA300F0E069 /* libsqlite3.0.tbd */; };
@@ -94,8 +94,8 @@
 		0EF0AB331DD1E17B00990C89 /* magnetic-indoor-positioning.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "magnetic-indoor-positioning.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0EF0AB361DD1E17B00990C89 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		0EF0AB381DD1E17B00990C89 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		0EF0AB3B1DD1E17B00990C89 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		0EF0AB3D1DD1E17B00990C89 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		0EF0AB401DD1E17B00990C89 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		0EF0AB421DD1E17B00990C89 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FADAD60D1E1E3E8800F0E069 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		FADAD6141E1E480200F0E069 /* SQLite.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = SQLite.xcodeproj; path = "SQLite.swift-master/SQLite.xcodeproj"; sourceTree = "<group>"; };
@@ -139,8 +139,8 @@
 				0EF0AB361DD1E17B00990C89 /* AppDelegate.swift */,
 				0EF0AB381DD1E17B00990C89 /* ViewController.swift */,
 				FADAD6341E1E546D00F0E069 /* magneticDB.swift */,
+				0EF0AB3A1DD1E17B00990C89 /* Main.storyboard */,
 				0EF0AB3D1DD1E17B00990C89 /* Assets.xcassets */,
-				0EF0AB3F1DD1E17B00990C89 /* LaunchScreen.storyboard */,
 				0EF0AB421DD1E17B00990C89 /* Info.plist */,
 				FADAD6141E1E480200F0E069 /* SQLite.xcodeproj */,
 			);
@@ -290,8 +290,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0EF0AB411DD1E17B00990C89 /* LaunchScreen.storyboard in Resources */,
 				0EF0AB3E1DD1E17B00990C89 /* Assets.xcassets in Resources */,
+				0EF0AB3C1DD1E17B00990C89 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -319,12 +319,12 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
-		0EF0AB3F1DD1E17B00990C89 /* LaunchScreen.storyboard */ = {
+		0EF0AB3A1DD1E17B00990C89 /* Main.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
-				0EF0AB401DD1E17B00990C89 /* Base */,
+				0EF0AB3B1DD1E17B00990C89 /* Base */,
 			);
-			name = LaunchScreen.storyboard;
+			name = Main.storyboard;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */

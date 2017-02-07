@@ -12,7 +12,7 @@ import CoreLocation
 import CoreMotion
 import SQLite
 
-class ViewController: UIViewController, CLLocationManagerDelegate {
+class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, CLLocationManagerDelegate, URLSessionDelegate {
     
     let locationManager = CLLocationManager()
     
@@ -48,64 +48,241 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
     @IBOutlet weak var accelerometerYProgress: UIProgressView!
     @IBOutlet weak var accelerometerZProgress: UIProgressView!
     
-    @IBOutlet var debugLabel: UILabel?
+    @IBOutlet var debugLabel: UILabel!
+    
+    @IBOutlet weak var xTextField: UITextField!
+    @IBOutlet weak var yTextField: UITextField!
+    @IBOutlet weak var intervalTextField: UITextField!
+    
+    @IBAction func timerButtonPressed(_ sender: Any) {
+//        let alert = UIAlertController(title: "Duration", message: "Please input the duration:", preferredStyle: .alert)
+//        alert.addTextField(configurationHandler: {
+//            (textField) in
+//            textField.placeholder = "Duration in seconds"
+//        })
+//        alert.addAction(UIAlertAction(title: "Start", style: .default, handler: {
+//            (_) in self.startRecord()
+//            if let textField = alert.textFields?[0] {
+//                if let text = textField.text {
+//                    DispatchQueue.main.asyncAfter(deadline: .now() + 3, execute: stopRecord())
+//                }
+//            }
+//        }))
+//        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { (_) in }))
+//        self.present(alert, animated: true, completion: nil)
+    }
+    
+    @IBAction func stopButtonPressed(_ sender: Any) {
+        stopRecord()
+    }
+    
+    func stopRecord() {
+        self.motionManager.stopMagnetometerUpdates()
+        let alert = UIAlertController(title: "Stop", message: "Magnetometer Updates Stopped", preferredStyle: .actionSheet)
+        alert.addAction(UIAlertAction(title: "Gotcha", style: .default, handler: nil))
+        self.present(alert, animated: true, completion: nil)
+        self.data = [["DATA START:"]]
+        self.myTableView.reloadData()
+    }
+    
+    @IBAction func startButtonPressed(_ sender: Any) {
+        startRecord()
+    }
+    
+    func startRecord() {
+        if let x = xTextField.text, let y = yTextField.text, let interval = intervalTextField.text {
+            guard let x = Int(x), let y = Int(y), let interval = TimeInterval(interval) else {
+                let alert = UIAlertController(title: "Error", message: "Please input X, Y and s", preferredStyle: .actionSheet)
+                alert.addAction(UIAlertAction(title: "Gotcha", style: .default, handler: nil))
+                self.present(alert, animated: true, completion: nil)
+                return
+            }
+            
+            xTextField.endEditing(true)
+            yTextField.endEditing(true)
+            intervalTextField.endEditing(true)
+            self.motionManager.magnetometerUpdateInterval = interval
+            self.motionManager.startDeviceMotionUpdates(to: OperationQueue.main) { motion, error in
+                guard let magneticField = motion?.magneticField else {
+                    return
+                }
+                
+                
+                let magX = Double(round(100*magneticField.field.x)/100)
+                let magY = Double(round(100*magneticField.field.y)/100)
+                let magZ = Double(round(100*magneticField.field.z)/100)
+                
+                //created URL
+                let requestURL = URL(string: self.URL_INSERT_DATA)!
+                var request = URLRequest(url: requestURL)
+                
+                //creating http parameters
+                let now = Date()
+                let dateFormatter = DateFormatter()
+                dateFormatter.dateFormat = "yyyy/MM/dd hh:mm:ss"
+                let dateString = dateFormatter.string(from: now)
+                let postParameters = "x=\(x)&y=\(y)&magx=\(magX)&magy=\(magY)&magz=\(magZ)&date=\(dateString)"
+                
+                //setting the HTTP header and adding the parameters to request body
+                request.httpMethod = "POST"
+                request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+                request.setValue("no-cache", forHTTPHeaderField: "Cache-Control")
+                request.httpBody = postParameters.data(using: String.Encoding.utf8)
+                
+                
+                //creating a task to send the post request
+                let backgroundQueue = DispatchQueue.global(qos: .background)
+                backgroundQueue.async {
+                    let session = URLSession.shared
+                    session.dataTask(with: request) {
+                        data, response, error in
+                        guard let data = data, let _ = response, error == nil else {
+                            print("error: \(error)")
+                            return
+                        }
+                        //print response value
+                        //print(String(data: data!, encoding: String.Encoding(rawValue: String.Encoding.utf8.rawValue)) as Any)
+                        
+                        //parsing the response
+                        self.debugLabel?.numberOfLines = 0
+                        self.debugLabel?.text = ""
+                        do {
+                            //converting resonse to NSDictionary
+                            let myJSON =  try JSONSerialization.jsonObject(with: data, options: .mutableContainers) as? [String : AnyObject]
+                            //parsing the json
+                            if let myJSON = myJSON {
+                                for parseJSON in myJSON  {
+                                    print("\(parseJSON.key) : \(parseJSON.value)")
+                                    self.debugLabel.text = self.debugLabel?.text?.appending("\(parseJSON.key) : \(parseJSON.value)\n")
+                                }
+                            } else {
+                                print(String(data: data, encoding: String.Encoding(rawValue: String.Encoding.utf8.rawValue)) as Any)
+                            }
+                        } catch {
+                            print(error)
+                        }
+                        
+                        }.resume()
+                }
+                
+                self.magneticFieldXLabel.text = "\(magX)"
+                self.magneticFieldYLabel.text = "\(magY)"
+                self.magneticFieldZLabel.text = "\(magZ)"
+                
+                let cellLabel = "x: \(magX), y:\(magY), z:\(magZ) -\(dateFormatter.string(from: now))"
+                self.data[0].append(cellLabel)
+                self.myTableView.reloadData()
+                
+                self.magneticFieldXProgress.setProgress(Float(abs(magX)), animated: true)
+                self.magneticFieldYProgress.setProgress(Float(abs(magY)), animated: true)
+                self.magneticFieldZProgress.setProgress(Float(abs(magZ)), animated: true)
+                
+            }
+        } else {
+            print("xTextField or yTextField has error.")
+        }
+    }
+    
+    let URL_INSERT_DATA = "http://findermacao.com/indoor-positioning/insert.php"
+    
+    var data = [["DATA START:"]]
+    var myTableView: UITableView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         self.locationManager.delegate = self
         
-//        do {
-//
-//            let insert = data.insert(locx <- 0, locy <- 0, magx <- 0.1, magy <- 0.2, magz <- 0.3, time <- "2017-01-05 17:53:11")
-//            _ = try db.run(insert)
-//            
-//            for _ in try db.prepare(data) {
-//                print("id: \(data[locx]), locy: \(data[locy]), time: \(data[time])")
-//            }
-//             SELECT * FROM "users"
-//            
-//            let alice = users.filter(id == rowid)
-//            
-//            try db.run(alice.update(email <- email.replace("mac.com", with: "me.com")))
-//            // UPDATE "users" SET "email" = replace("email", 'mac.com', 'me.com')
-//            // WHERE ("id" = 1)
-//
-//            try db.run(alice.delete())
-//            // DELETE FROM "users" WHERE ("id" = 1)
-//            
-//            try db.scalar(data.count) // 0
-//            // SELECT count(*) FROM "users"
-//        } catch {
-//            print("anything")
-//        }
+        let fullScreenSize = UIScreen.main.bounds.size
         
+        // 建立 UITableView 並設置原點及尺寸
+        myTableView = UITableView(frame: CGRect(
+            x: 0, y: fullScreenSize.height / 2 - 10,
+            width: fullScreenSize.width,
+            height: fullScreenSize.height / 2),
+                                      style: .grouped)
         
+        // 註冊 cell
+        myTableView.register(
+            UITableViewCell.self, forCellReuseIdentifier: "Cell")
+        
+        // 設置委任對象
+        myTableView.delegate = self
+        myTableView.dataSource = self
+        
+        // 分隔線的樣式
+        myTableView.separatorStyle = .singleLine
+        
+        // 分隔線的間距 四個數值分別代表 上、左、下、右 的間距
+        myTableView.separatorInset =
+            UIEdgeInsetsMake(0, 20, 0, 20)
+        
+        // 是否可以點選 cell
+        myTableView.allowsSelection = true
+        
+        // 是否可以多選 cell
+        myTableView.allowsMultipleSelection = false
+        
+        // 加入到畫面中
+        self.view.addSubview(myTableView)
+    }
+    
+    // 必須實作的方法：每一組有幾個 cell
+    func tableView(_ tableView: UITableView,
+                   numberOfRowsInSection section: Int) -> Int {
+        return data[section].count
+    }
+    
+    // 必須實作的方法：每個 cell 要顯示的內容
+    func tableView(_ tableView: UITableView,
+                           cellForRowAt indexPath: IndexPath)
+        -> UITableViewCell {
+            // 取得 tableView 目前使用的 cell
+            let cell =
+                tableView.dequeueReusableCell(
+                    withIdentifier: "Cell", for: indexPath as IndexPath) as
+            UITableViewCell
+            
+            // 設置 Accessory 按鈕樣式
+            if indexPath.section == 1 {
+                if indexPath.row == 0 {
+                    cell.accessoryType = .checkmark
+                } else if indexPath.row == 1 {
+                    cell.accessoryType = .detailButton
+                } else if indexPath.row == 2 {
+                    cell.accessoryType =
+                        .detailDisclosureButton
+                } else if indexPath.row == 3 {
+                    cell.accessoryType = .disclosureIndicator
+                }
+            }
+            
+            // 顯示的內容
+            if let myLabel = cell.textLabel {
+                myLabel.text = 
+                "\(data[indexPath.section][indexPath.row])"
+            }
+            
+            return cell
+    }
+    
+    // 有幾組 section
+    func numberOfSectionsInTableView(
+        tableView: UITableView) -> Int {
+        return data.count
+    }
+    
+    // 每個 section 的標題
+    func tableView(_ tableView: UITableView,
+                   titleForHeaderInSection section: Int) -> String? {
+        let title = section == 0 ? "DATA" : "DATA 2"
+        return title
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
         self.locationManager.startUpdatingHeading()
-        
-        self.motionManager.startMagnetometerUpdates(to: OperationQueue.main) { magnetometer, error in
-            guard let magneticField = magnetometer?.magneticField else {
-                return
-            }
-            
-            let x = magneticField.x
-            let y = magneticField.y
-            let z = magneticField.z
-            
-            self.magneticFieldXLabel.text = "\(x)"
-            self.magneticFieldYLabel.text = "\(y)"
-            self.magneticFieldZLabel.text = "\(z)"
-            
-            self.magneticFieldXProgress.setProgress(Float(abs(x)), animated: true)
-            self.magneticFieldYProgress.setProgress(Float(abs(y)), animated: true)
-            self.magneticFieldZProgress.setProgress(Float(abs(z)), animated: true)
-            
-        }
         
         self.motionManager.showsDeviceMovementDisplay = true
         self.motionManager.startDeviceMotionUpdates(using: CMAttitudeReferenceFrame.xArbitraryCorrectedZVertical, to: OperationQueue.main) { motion, error in
@@ -134,8 +311,6 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
             
 //            print("\(motion?.magneticField.accuracy.hashValue)")
 //            print("\(motion?.magneticField.field)")
-            
-
             
             let roll = CGFloat(attitude.roll)
             let pitch = CGFloat(attitude.pitch)
