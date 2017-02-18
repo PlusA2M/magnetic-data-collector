@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0EB2BE641E54159900A0D5E1 /* KNNDTW.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EB2BE631E54159900A0D5E1 /* KNNDTW.swift */; };
 		0EF0AB371DD1E17B00990C89 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EF0AB361DD1E17B00990C89 /* AppDelegate.swift */; };
 		0EF0AB391DD1E17B00990C89 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EF0AB381DD1E17B00990C89 /* ViewController.swift */; };
 		0EF0AB3C1DD1E17B00990C89 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0EF0AB3A1DD1E17B00990C89 /* Main.storyboard */; };
@@ -91,6 +92,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0EB2BE631E54159900A0D5E1 /* KNNDTW.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KNNDTW.swift; sourceTree = "<group>"; };
 		0EF0AB331DD1E17B00990C89 /* magnetic-indoor-positioning.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "magnetic-indoor-positioning.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0EF0AB361DD1E17B00990C89 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		0EF0AB381DD1E17B00990C89 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -138,6 +140,7 @@
 			children = (
 				0EF0AB361DD1E17B00990C89 /* AppDelegate.swift */,
 				0EF0AB381DD1E17B00990C89 /* ViewController.swift */,
+				0EB2BE631E54159900A0D5E1 /* KNNDTW.swift */,
 				FADAD6341E1E546D00F0E069 /* magneticDB.swift */,
 				0EF0AB3A1DD1E17B00990C89 /* Main.storyboard */,
 				0EF0AB3D1DD1E17B00990C89 /* Assets.xcassets */,
@@ -205,6 +208,7 @@
 					0EF0AB321DD1E17B00990C89 = {
 						CreatedOnToolsVersion = 8.1;
 						DevelopmentTeam = P296G6ZXXF;
+						LastSwiftMigration = 0820;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -303,6 +307,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FADAD6351E1E546D00F0E069 /* magneticDB.swift in Sources */,
+				0EB2BE641E54159900A0D5E1 /* KNNDTW.swift in Sources */,
 				0EF0AB391DD1E17B00990C89 /* ViewController.swift in Sources */,
 				0EF0AB371DD1E17B00990C89 /* AppDelegate.swift in Sources */,
 			);

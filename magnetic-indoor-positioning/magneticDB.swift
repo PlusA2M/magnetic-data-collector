@@ -9,17 +9,17 @@
 import SQLite
 
 class magneticDB {
-    private let db: Connection?
-    private let data = Table("magnetic")
-    private let id = Expression<Int64>("id")
-    private let x = Expression<Int64>("x")
-    private let y = Expression<Int64>("y")
-    private let magx = Expression<Double>("magx")
-    private let magy = Expression<Double>("magy")
-    private let magz = Expression<Double>("magz")
-    private let time = Expression<String>("time")
+    fileprivate let db: Connection?
+    fileprivate let data = Table("magnetic")
+    fileprivate let id = Expression<Int64>("id")
+    fileprivate let x = Expression<Int64>("x")
+    fileprivate let y = Expression<Int64>("y")
+    fileprivate let magx = Expression<Double>("magx")
+    fileprivate let magy = Expression<Double>("magy")
+    fileprivate let magz = Expression<Double>("magz")
+    fileprivate let time = Expression<String>("time")
     
-    private init() {
+    fileprivate init() {
         let path = NSSearchPathForDirectoriesInDomains(
             .documentDirectory, .userDomainMask, true
             ).first!
