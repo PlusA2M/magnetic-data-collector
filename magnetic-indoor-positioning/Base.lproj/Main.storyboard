@@ -273,7 +273,7 @@
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="DEBUG LABEL" textAlignment="center" lineBreakMode="wordWrap" baselineAdjustment="alignBaselines" minimumScaleFactor="0.59999999999999998" translatesAutoresizingMaskIntoConstraints="NO" id="EDB-iz-9U6">
-                                <rect key="frame" x="0.0" y="185" width="184" height="85"/>
+                                <rect key="frame" x="6" y="203" width="184" height="44"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <fontDescription key="fontDescription" name="Courier" family="Courier" pointSize="14"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
@@ -361,8 +361,11 @@
                                 <rect key="frame" x="127" y="246" width="58" height="30"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <state key="normal" title="Heading">
-                                    <color key="titleColor" red="0.0" green="0.0" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                    <color key="titleColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
                                 </state>
+                                <connections>
+                                    <action selector="headingRecordButtonPressed:" destination="BYZ-38-t0r" eventType="touchUpInside" id="W62-3T-dbM"/>
+                                </connections>
                             </button>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
@@ -386,6 +389,7 @@
                         <outlet property="debugLabel" destination="EDB-iz-9U6" id="Mcw-Dy-GMN"/>
                         <outlet property="disk" destination="wRz-CO-ufi" id="1Fb-wP-zPm"/>
                         <outlet property="headingLabel" destination="gWx-5g-6MH" id="kRA-4L-rvF"/>
+                        <outlet property="headingRecordButton" destination="emT-xa-WJY" id="1Vs-2J-4WM"/>
                         <outlet property="intervalTextField" destination="85Q-qX-Rnk" id="gye-TU-SJK"/>
                         <outlet property="magneticFieldNormalizedLabel" destination="LS0-id-C6Z" id="ko6-4o-8oy"/>
                         <outlet property="magneticFieldNormalizedProgress" destination="tNL-Sf-BOI" id="Vbh-g9-Sra"/>
@@ -413,7 +417,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="922" y="41"/>
+            <point key="canvasLocation" x="921.73913043478262" y="40.760869565217398"/>
         </scene>
     </scenes>
     <resources>
