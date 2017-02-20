@@ -17,39 +17,34 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     let locationManager = CLLocationManager()
     
     let motionManager = CMMotionManager()
-    var angle: Int = 0
+    
+    let magneticDB: MagneticDB = MagneticDB()
+    var x: Int64?
+    var y: Int64?
+    var angle: Int64?
+    var magX: Double?
+    var magY: Double?
+    var magZ: Double?
+    var mag: Double?
+    var dateString: String?
     
     @IBOutlet var disk: UIImageView?
-    
     @IBOutlet var container: UIView?
-    
     @IBOutlet var labels: [UILabel]?
-    
     @IBOutlet var headingLabel: UILabel?
     
     @IBOutlet weak var pitchLabel: UILabel!
     @IBOutlet weak var rollLabel: UILabel!
     @IBOutlet weak var yawLabel: UILabel!
-    @IBOutlet weak var pitchProgress: UIProgressView!
-    @IBOutlet weak var rollProgress: UIProgressView!
-    @IBOutlet weak var yawProgress: UIProgressView!
     
     @IBOutlet weak var magneticFieldXLabel: UILabel!
     @IBOutlet weak var magneticFieldYLabel: UILabel!
     @IBOutlet weak var magneticFieldZLabel: UILabel!
     @IBOutlet weak var magneticFieldNormalizedLabel: UILabel!
     
-    @IBOutlet weak var magneticFieldXProgress: UIProgressView!
-    @IBOutlet weak var magneticFieldYProgress: UIProgressView!
-    @IBOutlet weak var magneticFieldZProgress: UIProgressView!
-    @IBOutlet weak var magneticFieldNormalizedProgress: UIProgressView!
-    
     @IBOutlet weak var accelerometerXLabel: UILabel!
     @IBOutlet weak var accelerometerYLabel: UILabel!
     @IBOutlet weak var accelerometerZLabel: UILabel!
-    @IBOutlet weak var accelerometerXProgress: UIProgressView!
-    @IBOutlet weak var accelerometerYProgress: UIProgressView!
-    @IBOutlet weak var accelerometerZProgress: UIProgressView!
     
     @IBOutlet var debugLabel: UILabel!
     
@@ -60,12 +55,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     @IBOutlet weak var onlineUpdateSwitch: UISwitch!
     
     @IBOutlet weak var dateLabel: UILabel!
-    @IBOutlet weak var headingRecordButton: UIButton!
-    
-    @IBAction func headingRecordButtonPressed(_ sender: UIButton?) {
-        sender?.setTitleColor(.blue, for: .normal)
-        sender?.tag = 1
-    }
+    @IBOutlet weak var recordWaySegmentedControl: UISegmentedControl!
     
     @IBAction func timerButtonPressed(_ sender: Any) {
         let alert = UIAlertController(title: "Duration", message: "Please input the duration:", preferredStyle: .alert)
@@ -85,28 +75,15 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         self.present(alert, animated: true, completion: nil)
     }
     
-    @IBAction func stopButtonPressed(_ sender: Any) {
-        stopRecord()
-        
-    }
-    
     func stopRecord() {
-        self.motionManager.stopDeviceMotionUpdates()
-//        let alert = UIAlertController(title: "Stop", message: "Magnetometer Updates Stopped", preferredStyle: .actionSheet)
-//        alert.addAction(UIAlertAction(title: "Gotcha", style: .default, handler: nil))
-//        self.present(alert, animated: true, completion: nil)
+        self.onlineUpdateSwitch.setOn(false, animated: true)
         self.data = [["FINISHED"]]
         self.myTableView.reloadData()
     }
     
-    @IBAction func startButtonPressed(_ sender: Any) {
-        startRecord()
-    }
-    
     func startRecord() {
-        self.data[0].append("TEST")
         if let x = xTextField.text, let y = yTextField.text, let interval = intervalTextField.text {
-            guard let x = Int(x), let y = Int(y), let interval = TimeInterval(interval) else {
+            guard let x = Int64(x), let y = Int64(y), let interval = TimeInterval(interval) else {
                 let alert = UIAlertController(title: "Error", message: "Please input X, Y and s", preferredStyle: .actionSheet)
                 alert.addAction(UIAlertAction(title: "Gotcha", style: .default, handler: nil))
                 self.present(alert, animated: true, completion: nil)
@@ -116,6 +93,8 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
             self.locationManager.startUpdatingHeading()
             self.motionManager.showsDeviceMovementDisplay = true
             
+            self.x = x
+            self.y = y
             xTextField.endEditing(true)
             yTextField.endEditing(true)
             intervalTextField.endEditing(true)
@@ -138,10 +117,6 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                     self?.accelerometerZLabel.text = "\(accelerometerZ)"
                     //                print("\(accelerometerData?.acceleration)")
                     
-                    self?.accelerometerXProgress.setProgress(abs(accelerometerX), animated: true)
-                    self?.accelerometerYProgress.setProgress(abs(accelerometerY), animated: true)
-                    self?.accelerometerZProgress.setProgress(abs(accelerometerZ), animated: true)
-                    
                 }
                 
                 //            print("\(motion?.magneticField.accuracy.hashValue)")
@@ -155,11 +130,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                 self.pitchLabel?.text = "\( (180 / M_PI) * (attitude.pitch) )"
                 self.rollLabel?.text = "\( (180 / M_PI) * (attitude.roll) )"
                 self.yawLabel?.text = "\( (180 / M_PI) * (attitude.yaw) )"
-                
-                self.pitchProgress.setProgress(Float(abs((180 / M_PI) * (attitude.pitch) / 90)), animated: true)
-                self.rollProgress.setProgress(Float(abs((180 / M_PI) * (attitude.roll) / 180)), animated: true)
-                self.yawProgress.setProgress(Float(abs((180 / M_PI) * (attitude.yaw) / 180)), animated: true)
-                
+
                 var diskTransform = CATransform3DIdentity
                 diskTransform.m34 = 1.0/500.0
                 diskTransform = CATransform3DRotate(diskTransform, roll, 0, 1, 0)
@@ -182,87 +153,31 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                     return
                 }
                 
-                let magX = Double(round(10000000*magneticField.field.x)/10000000)
-                let magY = Double(round(10000000*magneticField.field.y)/10000000)
-                let magZ = Double(round(10000000*magneticField.field.z)/10000000)
-                let mag = sqrt(magX*magX + magY*magY + magZ*magZ)
-                //created URL
-                let requestURL = URL(string: self.URL_INSERT_DATA)!
-                var request = URLRequest(url: requestURL)
-                
-                //creating http parameters
-                let now = Date()
-                let dateFormatter = DateFormatter()
-                dateFormatter.dateFormat = "yyyy/MM/dd hh:mm:ss"
-                let dateString = dateFormatter.string(from: now)
-                let postParameters = "x=\(x)&y=\(y)&angle=\(self.angle)&magx=\(magX)&magy=\(magY)&magz=\(magZ)&date=\(dateString)"
-                
-                //setting the HTTP header and adding the parameters to request body
-                request.httpMethod = "POST"
-                request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-                request.setValue("no-cache", forHTTPHeaderField: "Cache-Control")
-                request.httpBody = postParameters.data(using: String.Encoding.utf8)
-                
+                self.magX = Double(round(10000000*magneticField.field.x)/10000000)
+                self.magY = Double(round(10000000*magneticField.field.y)/10000000)
+                self.magZ = Double(round(10000000*magneticField.field.z)/10000000)
+                self.mag = sqrt(self.magX!*self.magX! + self.magY!*self.magY! + self.magZ!*self.magZ!)
                 
                 if (self.onlineUpdateSwitch.isOn) {
                     //creating a task to send the post request
                     let backgroundQueue = DispatchQueue.global(qos: .background)
                     backgroundQueue.async {
-                        let session = URLSession.shared
-                        session.dataTask(with: request) {
-                            data, response, error in
-                            guard let data = data, let _ = response, error == nil else {
-                                print("error: \(error)")
-                                return
-                            }
-                            
-                            //print response value
-                            //print(String(data: data!, encoding: String.Encoding(rawValue: String.Encoding.utf8.rawValue)) as Any)
-                            
-                            //parsing the response
-                            self.debugLabel?.numberOfLines = 0
-                            self.debugLabel?.text = ""
-                            do {
-                                //converting resonse to NSDictionary
-                                let myJSON =  try JSONSerialization.jsonObject(with: data, options: .mutableContainers) as? [String : AnyObject]
-                                //parsing the json
-                                if let myJSON = myJSON {
-                                    for parseJSON in myJSON  {
-                                        print("\(parseJSON.key) : \(parseJSON.value)")
-                                        self.debugLabel.text = self.debugLabel?.text?.appending("\(parseJSON.key) : \(parseJSON.value)\n")
-                                    }
-                                } else {
-                                    print(String(data: data, encoding: String.Encoding(rawValue: String.Encoding.utf8.rawValue)) as Any)
-                                }
-                            } catch {
-                                print(error)
-                            }
-                            
-                            }.resume()
+                        self.magneticDB.insertData(valueX: self.x!, valueY: self.y!, valueAngle: Int64(self.angle!), valueMagx: self.magX!, valueMagy: self.magY!, valueMagz: self.magZ!, valueMag: self.mag!, valueDate: self.dateString!)
                     }
                 }
                 
-                self.magneticFieldXLabel.text = "\(magX)"
-                self.magneticFieldYLabel.text = "\(magY)"
-                self.magneticFieldZLabel.text = "\(magZ)"
-                self.magneticFieldNormalizedLabel.text = "\(mag)"
-                self.dateLabel.text = "\(dateString)"
-                
-                
-//                let originalCellLabel = "x: \(oriMagX), y:\(oriMagY), z:\(oriMagZ) -\(dateFormatter.string(from: now))"
-                let cellLabel = "\(magX)|\(magY)|\(magZ) - \(dateFormatter.string(from: now))"
-//                self.data[0][0] = originalCellLabel
-//                self.data[0][1] = compareCellLabel
+                self.magneticFieldXLabel.text = "\(self.magX!)"
+                self.magneticFieldYLabel.text = "\(self.magY!)"
+                self.magneticFieldZLabel.text = "\(self.magZ!)"
+                self.magneticFieldNormalizedLabel.text = "\(self.mag!)"
+                self.dateLabel.text = "\(self.dateString!)"
+
+                let cellLabel = "Point(\(self.x!), \(self.y!))(\(self.angle!)): \(self.mag!) - \(self.dateString!)"
                 self.data[0].append(cellLabel)
                 self.myTableView.reloadData()
                 
                 let lastCellIndexPath = IndexPath(row: self.data[0].count-1, section: 0)
                 self.myTableView.scrollToRow(at: lastCellIndexPath, at: .bottom, animated: false)
-                
-                self.magneticFieldXProgress.setProgress(Float(abs(magX)), animated: true)
-                self.magneticFieldYProgress.setProgress(Float(abs(magY)), animated: true)
-                self.magneticFieldZProgress.setProgress(Float(abs(magZ)), animated: true)
-                self.magneticFieldNormalizedProgress.setProgress(Float(abs(mag)), animated: true)
                 
             }
         } else {
@@ -271,180 +186,71 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     }
 
     func recordOnce() {
-        self.data[0].append("Record:")
-        if let x = xTextField.text, let y = yTextField.text {
-            guard let x = Int(x), let y = Int(y) else {
-                let alert = UIAlertController(title: "Error", message: "Please input X, Y and s", preferredStyle: .actionSheet)
-                alert.addAction(UIAlertAction(title: "Gotcha", style: .default, handler: nil))
-                self.present(alert, animated: true, completion: nil)
-                return
-            }
-            
-            self.locationManager.startUpdatingHeading()
-            self.motionManager.showsDeviceMovementDisplay = true
+        if let x = Int64(xTextField.text!), let y = Int64(yTextField.text!) {
+            self.x = x
+            self.y = y
             
             xTextField.endEditing(true)
             yTextField.endEditing(true)
             intervalTextField.endEditing(true)
-            self.motionManager.startDeviceMotionUpdates(using: CMAttitudeReferenceFrame.xMagneticNorthZVertical, to: OperationQueue.main) { motion, error in
-                guard let magneticField = motion?.magneticField else {
-                    return
+                
+            if (self.onlineUpdateSwitch.isOn && self.recordWaySegmentedControl.selectedSegmentIndex == 0) {
+                let backgroundQueue = DispatchQueue.global(qos: .background)
+                backgroundQueue.async {
+                    self.magneticDB.insertData(valueX: self.x!, valueY: self.y!, valueAngle: Int64(self.angle!), valueMagx: self.magX!, valueMagy: self.magY!, valueMagz: self.magZ!, valueMag: self.mag!, valueDate: self.dateString!)
+                    let cellLabel = "Point(\(self.x!), \(self.y!))(\(self.angle!)): \(self.mag!) - \(self.dateString!)"
+                    self.data[0].append(cellLabel)
+                    self.myTableView.reloadData()
                 }
-                
-                let magX = Double(round(10000000*magneticField.field.x)/10000000)
-                let magY = Double(round(10000000*magneticField.field.y)/10000000)
-                let magZ = Double(round(10000000*magneticField.field.z)/10000000)
-                let mag = sqrt(magX*magX + magY*magY + magZ*magZ)
-                //created URL
-                let requestURL = URL(string: self.URL_INSERT_DATA)!
-                var request = URLRequest(url: requestURL)
-                
-                //creating http parameters
-                let now = Date()
-                let dateFormatter = DateFormatter()
-                dateFormatter.dateFormat = "yyyy/MM/dd hh:mm:ss"
-                let dateString = dateFormatter.string(from: now)
-                let postParameters = "x=\(x)&y=\(y)&magx=\(magX)&magy=\(magY)&magz=\(magZ)&angle=\(self.angle)&date=\(dateString)"
-                
-                //setting the HTTP header and adding the parameters to request body
-                request.httpMethod = "POST"
-                request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-                request.setValue("no-cache", forHTTPHeaderField: "Cache-Control")
-                request.httpBody = postParameters.data(using: String.Encoding.utf8)
-                
-                if (self.onlineUpdateSwitch.isOn) {
-                    //creating a task to send the post request
-                    let backgroundQueue = DispatchQueue.global(qos: .background)
-                    backgroundQueue.async {
-                        let session = URLSession.shared
-                        session.dataTask(with: request) {
-                            data, response, error in
-                            guard let data = data, let _ = response, error == nil else {
-                                print("error: \(error)")
-                                return
-                            }
-
-                            self.debugLabel?.numberOfLines = 0
-                            self.debugLabel?.text = ""
-                            do {
-                                //converting resonse to NSDictionary
-                                let myJSON =  try JSONSerialization.jsonObject(with: data, options: .mutableContainers) as? [String : AnyObject]
-                                //parsing the json
-                                if let myJSON = myJSON {
-                                    for parseJSON in myJSON  {
-                                        print("\(parseJSON.key) : \(parseJSON.value)")
-                                        self.debugLabel.text = self.debugLabel?.text?.appending("\(parseJSON.key) : \(parseJSON.value)\n")
-                                    }
-                                } else {
-                                    print(String(data: data, encoding: String.Encoding(rawValue: String.Encoding.utf8.rawValue)) as Any)
-                                }
-                            } catch {
-                                print(error)
-                            }
-                            
-                            }.resume()
-                    }
-                }
-                
-                self.stopRecord()
-                
-                self.magneticFieldXLabel.text = "\(magX)"
-                self.magneticFieldYLabel.text = "\(magY)"
-                self.magneticFieldZLabel.text = "\(magZ)"
-                self.magneticFieldNormalizedLabel.text = "\(mag)"
-                self.dateLabel.text = "\(dateString)"
-                
-                
-                //                let originalCellLabel = "x: \(oriMagX), y:\(oriMagY), z:\(oriMagZ) -\(dateFormatter.string(from: now))"
-                let cellLabel = "\(magX)|\(magY)|\(magZ) - \(dateFormatter.string(from: now))"
-                //                self.data[0][0] = originalCellLabel
-                //                self.data[0][1] = compareCellLabel
-                self.data[0].append(cellLabel)
-                self.myTableView.reloadData()
-                
-                let lastCellIndexPath = IndexPath(row: self.data[0].count-1, section: 0)
-                self.myTableView.scrollToRow(at: lastCellIndexPath, at: .bottom, animated: false)
-                
-                self.magneticFieldXProgress.setProgress(Float(abs(magX)), animated: true)
-                self.magneticFieldYProgress.setProgress(Float(abs(magY)), animated: true)
-                self.magneticFieldZProgress.setProgress(Float(abs(magZ)), animated: true)
-                self.magneticFieldNormalizedProgress.setProgress(Float(abs(mag)), animated: true)
-                
             }
+            let lastCellIndexPath = IndexPath(row: self.data[0].count-1, section: 0)
+            self.myTableView.scrollToRow(at: lastCellIndexPath, at: .bottom, animated: false)
         } else {
-            print("xTextField or yTextField has error.")
+            let alert = UIAlertController(title: "Error", message: "Please input X, Y and s", preferredStyle: .actionSheet)
+            alert.addAction(UIAlertAction(title: "Gotcha", style: .default, handler: nil))
+            self.present(alert, animated: true, completion: nil)
+            return
         }
         
     }
-
     
     func displayDate() {
         let now = Date()
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy/MM/dd hh:mm:ss"
-        let dateString = dateFormatter.string(from: now)
-        
-        self.dateLabel.text = "\(dateString)"
+        self.dateString = dateFormatter.string(from: now)
+        self.dateLabel.text = "\(self.dateString!)"
     }
     
-    let URL_INSERT_DATA = "http://findermacao.com/indoor-positioning/insert.php"
-    
-    var data = [["DATA START:"]]
-    var myTableView: UITableView!
+    var data = [[]]
+
+    @IBOutlet weak var myTableView: UITableView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let magneticDB: MagneticDB = MagneticDB.init()
-        if let _ = magneticDB.insertData(valueX: 9, valueY: 9, valueAngle: 9, valueMagx: 9.9, valueMagy: 9.9, valueMagz: 9.9, valueMag: 9.9, valueDate: "2099-09-09 09:09:09") {
-            
-        }
-        
-        
-        let _ = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(self.displayDate), userInfo: nil, repeats: true)
-        self.locationManager.delegate = self
-        
-        let fullScreenSize = UIScreen.main.bounds.size
-        
-        // 建立 UITableView 並設置原點及尺寸
-        myTableView = UITableView(frame: CGRect(
-            x: 0, y: fullScreenSize.height / 2 - 10,
-            width: fullScreenSize.width,
-            height: fullScreenSize.height / 2),
-                                      style: .grouped)
-        
-        // 註冊 cell
+        self.displayAllData()
         myTableView.register(
             UITableViewCell.self, forCellReuseIdentifier: "Cell")
         
-        // 設置委任對象
         myTableView.delegate = self
         myTableView.dataSource = self
         
-        // 分隔線的樣式
         myTableView.separatorStyle = .singleLine
-        
-        // 分隔線的間距 四個數值分別代表 上、左、下、右 的間距
         myTableView.separatorInset =
             UIEdgeInsetsMake(0, 20, 0, 20)
         
-        // 是否可以點選 cell
         myTableView.allowsSelection = true
-        
-        // 是否可以多選 cell
         myTableView.allowsMultipleSelection = false
         
-        // 加入到畫面中
         self.view.addSubview(myTableView)
     }
     
-    // 必須實作的方法：每一組有幾個 cell
     func tableView(_ tableView: UITableView,
                    numberOfRowsInSection section: Int) -> Int {
         return data[section].count
     }
     
-    // 必須實作的方法：每個 cell 要顯示的內容
     func tableView(_ tableView: UITableView,
                            cellForRowAt indexPath: IndexPath)
         -> UITableViewCell {
@@ -477,22 +283,33 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
             return cell
     }
     
-    // 有幾組 section
     func numberOfSections(
         in tableView: UITableView) -> Int {
         return data.count
     }
     
-    // 每個 section 的標題
     func tableView(_ tableView: UITableView,
                    titleForHeaderInSection section: Int) -> String? {
         let title = section == 0 ? "DATA" : "DATA 2"
         return title
     }
     
+    func displayAllData() {
+        self.magneticDB.queryData() { (tmp) -> () in
+            for dict in tmp {
+                let x = dict["x"], y = dict["y"], angle = dict["angle"], mag = dict["mag"], date = dict["date"]
+                let cellLabel = "Point(\(x!), \(y!))(\(angle!)): \(mag!) - \(date!)"
+                self.data[0].append(cellLabel)
+            }
+        }
+        self.myTableView.reloadData()
+    }
+    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
+        let _ = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(self.displayDate), userInfo: nil, repeats: true)
+        self.locationManager.delegate = self
         self.locationManager.startUpdatingHeading()
         
         self.motionManager.showsDeviceMovementDisplay = true
@@ -500,8 +317,21 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
             guard let attitude = motion?.attitude else {
                 return
             }
+            guard let magneticField = motion?.magneticField else {
+                return
+            }
             
-//            self.motionManager.accelerometerUpdateInterval = 0.1
+            self.magX = Double(round(10000000*magneticField.field.x)/10000000)
+            self.magY = Double(round(10000000*magneticField.field.y)/10000000)
+            self.magZ = Double(round(10000000*magneticField.field.z)/10000000)
+            self.mag = sqrt(self.magX!*self.magX! + self.magY!*self.magY! + self.magZ!*self.magZ!)
+            
+            self.magneticFieldXLabel.text = String(self.magX!)
+            self.magneticFieldYLabel.text = String(self.magY!)
+            self.magneticFieldZLabel.text = String(self.magZ!)
+            self.magneticFieldNormalizedLabel.text = String(self.mag!)
+            
+            self.motionManager.accelerometerUpdateInterval = 0
             self.motionManager.startAccelerometerUpdates(to: OperationQueue.main) {
                 [weak self] (accelerometerData: CMAccelerometerData?, error: Error?) in
                 
@@ -513,10 +343,6 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                 self?.accelerometerYLabel.text = "\(accelerometerY)"
                 self?.accelerometerZLabel.text = "\(accelerometerZ)"
 //                print("\(accelerometerData?.acceleration)")
-                
-                self?.accelerometerXProgress.setProgress(abs(accelerometerX), animated: true)
-                self?.accelerometerYProgress.setProgress(abs(accelerometerY), animated: true)
-                self?.accelerometerZProgress.setProgress(abs(accelerometerZ), animated: true)
                 
             }
             
@@ -531,10 +357,6 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
             self.pitchLabel?.text = "\( (180 / M_PI) * (attitude.pitch) )"
             self.rollLabel?.text = "\( (180 / M_PI) * (attitude.roll) )"
             self.yawLabel?.text = "\( (180 / M_PI) * (attitude.yaw) )"
-            
-            self.pitchProgress.setProgress(Float(abs((180 / M_PI) * (attitude.pitch) / 90)), animated: true)
-            self.rollProgress.setProgress(Float(abs((180 / M_PI) * (attitude.roll) / 180)), animated: true)
-            self.yawProgress.setProgress(Float(abs((180 / M_PI) * (attitude.yaw) / 180)), animated: true)
             
             var diskTransform = CATransform3DIdentity
             diskTransform.m34 = 1.0/500.0
@@ -560,24 +382,23 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         
-        self.locationManager.stopUpdatingHeading()
-        self.motionManager.stopDeviceMotionUpdates()
+//        self.locationManager.stopUpdatingHeading()
+//        self.motionManager.stopDeviceMotionUpdates()
     }
     
     var heading: CGFloat? = nil
-    var headingArray: [Int] = [0, 45, 90, 135, 180, -45, -90, -135]
+    var headingArray: [Int64] = [0, 45, 90, 135, 180, -135, -90, -45]
 
     func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {
         guard newHeading.headingAccuracy > 0 else { return }
         
         let magnetic = newHeading.magneticHeading // the degree (-180 ~ 180)
-        
         let readable = magnetic > 180.5 ? magnetic - 360 : magnetic // the degree (0 ~ 360)
-        let headingInteger: Int = Int(round(readable))
+        let headingInteger: Int64 = Int64(round(readable))
         self.angle = headingInteger
         self.headingLabel?.text = "\(headingInteger)"
 
-        if self.headingRecordButton.tag == 1 && headingArray[0] == headingInteger {
+        if self.recordWaySegmentedControl.selectedSegmentIndex == 0 && headingArray[0]-1 <= headingInteger && headingArray[0]+1 >= headingInteger {
                 print("\(headingInteger)")
                 self.recordOnce()
                 headingArray = headingArray.shiftRight()

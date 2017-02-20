@@ -45,7 +45,7 @@ class MagneticDB {
                 table.column(magy)
                 table.column(magz)
                 table.column(mag)
-                table.column(date, unique: true)
+                table.column(date)
             })
         } catch {
             print("Unable to create table")
@@ -55,11 +55,34 @@ class MagneticDB {
     func insertData(valueX: Int64, valueY: Int64, valueAngle: Int64, valueMagx: Double, valueMagy: Double, valueMagz: Double, valueMag: Double, valueDate: String) -> Int64? {
         do {
             let rowid = try db?.run(data.insert(x <- valueX, y <- valueY, angle <- valueAngle, magx <- valueMagx, magy <- valueMagy, magz <- valueMagz, mag <- valueMag, date <- valueDate))
-            print("inserted id: \(rowid)")
+            print("inserted id: \(rowid!)")
             return rowid!
         } catch {
-            print("insertion failed: \(error)")
+            print("Insertion failed: \(error)")
             return nil
         }
+    }
+    
+    func queryData(completion: (Array<Dictionary<String, String>>) -> ()) {
+        
+        var array = [[String:String]]()
+        
+        do {
+            if let stmt = try db?.prepare(data) {
+                var dict: Dictionary<String, String> = Dictionary()
+                for tmp in stmt {
+//                    print("\(tmp[date]) Point(\(tmp[x]), \(tmp[y])) at \(tmp[angle]): \(tmp[mag])")
+                    dict["date"] = tmp[date]
+                    dict["x"] = String(tmp[x])
+                    dict["y"] = String(tmp[y])
+                    dict["angle"] = String(tmp[angle])
+                    dict["mag"] = String(tmp[mag])
+                    array.append(dict)
+                }
+            }
+        } catch {
+            print("Query failed: \(error)")
+        }
+        completion(array)
     }
 }
