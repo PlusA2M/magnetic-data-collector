@@ -395,7 +395,13 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(self.displayDate), userInfo: nil, repeats: true)
+        let magneticDB: MagneticDB = MagneticDB.init()
+        if let _ = magneticDB.insertData(valueX: 9, valueY: 9, valueAngle: 9, valueMagx: 9.9, valueMagy: 9.9, valueMagz: 9.9, valueMag: 9.9, valueDate: "2099-09-09 09:09:09") {
+            
+        }
+        
+        
+        let _ = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(self.displayDate), userInfo: nil, repeats: true)
         self.locationManager.delegate = self
         
         let fullScreenSize = UIScreen.main.bounds.size
