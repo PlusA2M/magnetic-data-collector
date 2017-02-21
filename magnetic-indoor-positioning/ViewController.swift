@@ -12,11 +12,16 @@ import CoreLocation
 import CoreMotion
 import SQLite
 
-class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, CLLocationManagerDelegate, URLSessionDelegate {
+class ViewController: UIViewController, CLLocationManagerDelegate, URLSessionDelegate {
     
     let locationManager = CLLocationManager()
-    
     let motionManager = CMMotionManager()
+    
+    var myTableViewController: DataTableViewController!
+    var myTableView: UITableView!
+    
+    var debugTimer: Timer?
+    var duration: Double = -1.0
     
     let magneticDB: MagneticDB = MagneticDB()
     var x: Int64?
@@ -51,33 +56,40 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     @IBOutlet weak var xTextField: UITextField!
     @IBOutlet weak var yTextField: UITextField!
     @IBOutlet weak var intervalTextField: UITextField!
+    @IBOutlet weak var periodTextField: UITextField!
     
     @IBOutlet weak var onlineUpdateSwitch: UISwitch!
     
     @IBOutlet weak var dateLabel: UILabel!
     @IBOutlet weak var recordWaySegmentedControl: UISegmentedControl!
     
-    @IBAction func timerButtonPressed(_ sender: Any) {
-        let alert = UIAlertController(title: "Duration", message: "Please input the duration:", preferredStyle: .alert)
-        alert.addTextField(configurationHandler: {
-            (textField) in
-            textField.placeholder = "Duration in seconds"
-        })
-        alert.addAction(UIAlertAction(title: "Start", style: .default, handler: {
-            (_) in self.startRecord()
-            if let textField = alert.textFields?[0] {
-                if let text = Double(textField.text!) {
-                    self.perform(#selector(self.stopRecord), with: nil, afterDelay: text)
-                }
-            }
-        }))
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { (_) in }))
-        self.present(alert, animated: true, completion: nil)
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "DataTableSegue" {
+            self.myTableViewController = segue.destination as! DataTableViewController
+            self.myTableView = self.myTableViewController.tableView
+        }
+    }
+
+    func startTimer(duraction: Double) {
+        if let duration = Double(periodTextField.text!) {
+            self.duration = duration
+        }
+        self.debugTimer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(self.updateTimer), userInfo: nil, repeats: true)
+    }
+    
+    func updateTimer() {
+        self.debugLabel.text = "Stop Record In \(self.duration)s"
+
+        if self.duration-1.0 < 0.0 {
+            debugTimer?.invalidate()
+            self.stopRecord()
+        }
+        self.duration -= 1
     }
     
     func stopRecord() {
         self.onlineUpdateSwitch.setOn(false, animated: true)
-        self.data = [["FINISHED"]]
+        myTableViewController.data = [["FINISHED"]]
         self.myTableView.reloadData()
     }
     
@@ -103,7 +115,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                 guard let attitude = motion?.attitude else {
                     return
                 }
-                
+
                 self.motionManager.accelerometerUpdateInterval = interval
                 self.motionManager.startAccelerometerUpdates(to: OperationQueue.main) {
                     [weak self] (accelerometerData: CMAccelerometerData?, error: Error?) in
@@ -159,10 +171,9 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                 self.mag = sqrt(self.magX!*self.magX! + self.magY!*self.magY! + self.magZ!*self.magZ!)
                 
                 if (self.onlineUpdateSwitch.isOn) {
-                    //creating a task to send the post request
                     let backgroundQueue = DispatchQueue.global(qos: .background)
                     backgroundQueue.async {
-                        self.magneticDB.insertData(valueX: self.x!, valueY: self.y!, valueAngle: Int64(self.angle!), valueMagx: self.magX!, valueMagy: self.magY!, valueMagz: self.magZ!, valueMag: self.mag!, valueDate: self.dateString!)
+                        let _ = self.magneticDB.insertData(valueX: self.x!, valueY: self.y!, valueAngle: Int64(self.angle!), valueMagx: self.magX!, valueMagy: self.magY!, valueMagz: self.magZ!, valueMag: self.mag!, valueDate: self.dateString!)
                     }
                 }
                 
@@ -173,10 +184,10 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                 self.dateLabel.text = "\(self.dateString!)"
 
                 let cellLabel = "Point(\(self.x!), \(self.y!))(\(self.angle!)): \(self.mag!) - \(self.dateString!)"
-                self.data[0].append(cellLabel)
+                self.myTableViewController.data[0].append(cellLabel)
                 self.myTableView.reloadData()
                 
-                let lastCellIndexPath = IndexPath(row: self.data[0].count-1, section: 0)
+                let lastCellIndexPath = IndexPath(row: self.myTableViewController.data[0].count-1, section: 0)
                 self.myTableView.scrollToRow(at: lastCellIndexPath, at: .bottom, animated: false)
                 
             }
@@ -194,17 +205,18 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
             yTextField.endEditing(true)
             intervalTextField.endEditing(true)
                 
-            if (self.onlineUpdateSwitch.isOn && self.recordWaySegmentedControl.selectedSegmentIndex == 0) {
+            if (self.onlineUpdateSwitch.isOn) {
                 let backgroundQueue = DispatchQueue.global(qos: .background)
                 backgroundQueue.async {
-                    self.magneticDB.insertData(valueX: self.x!, valueY: self.y!, valueAngle: Int64(self.angle!), valueMagx: self.magX!, valueMagy: self.magY!, valueMagz: self.magZ!, valueMag: self.mag!, valueDate: self.dateString!)
+                    _ = self.magneticDB.insertData(valueX: self.x!, valueY: self.y!, valueAngle: Int64(self.angle!), valueMagx: self.magX!, valueMagy: self.magY!, valueMagz: self.magZ!, valueMag: self.mag!, valueDate: self.dateString!)
                     let cellLabel = "Point(\(self.x!), \(self.y!))(\(self.angle!)): \(self.mag!) - \(self.dateString!)"
-                    self.data[0].append(cellLabel)
+                    self.myTableViewController.data[0].append(cellLabel)
                     self.myTableView.reloadData()
+                    self.myTableView.setNeedsDisplay()
+                    let lastCellIndexPath = IndexPath(row: self.myTableViewController.data[0].count-1, section: 0)
+//                    self.myTableView.scrollToRow(at: lastCellIndexPath, at: .bottom, animated: false)
                 }
             }
-            let lastCellIndexPath = IndexPath(row: self.data[0].count-1, section: 0)
-            self.myTableView.scrollToRow(at: lastCellIndexPath, at: .bottom, animated: false)
         } else {
             let alert = UIAlertController(title: "Error", message: "Please input X, Y and s", preferredStyle: .actionSheet)
             alert.addAction(UIAlertAction(title: "Gotcha", style: .default, handler: nil))
@@ -222,87 +234,21 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         self.dateLabel.text = "\(self.dateString!)"
     }
     
-    var data = [[]]
-
-    @IBOutlet weak var myTableView: UITableView!
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        self.displayAllData()
-        myTableView.register(
-            UITableViewCell.self, forCellReuseIdentifier: "Cell")
-        
-        myTableView.delegate = self
-        myTableView.dataSource = self
-        
-        myTableView.separatorStyle = .singleLine
-        myTableView.separatorInset =
-            UIEdgeInsetsMake(0, 20, 0, 20)
-        
-        myTableView.allowsSelection = true
-        myTableView.allowsMultipleSelection = false
-        
-        self.view.addSubview(myTableView)
-    }
-    
-    func tableView(_ tableView: UITableView,
-                   numberOfRowsInSection section: Int) -> Int {
-        return data[section].count
-    }
-    
-    func tableView(_ tableView: UITableView,
-                           cellForRowAt indexPath: IndexPath)
-        -> UITableViewCell {
-            // 取得 tableView 目前使用的 cell
-            let cell =
-                tableView.dequeueReusableCell(
-                    withIdentifier: "Cell", for: indexPath as IndexPath) as
-            UITableViewCell
-            
-            // 設置 Accessory 按鈕樣式
-            if indexPath.section == 1 {
-                if indexPath.row == 0 {
-                    cell.accessoryType = .checkmark
-                } else if indexPath.row == 1 {
-                    cell.accessoryType = .detailButton
-                } else if indexPath.row == 2 {
-                    cell.accessoryType =
-                        .detailDisclosureButton
-                } else if indexPath.row == 3 {
-                    cell.accessoryType = .disclosureIndicator
-                }
-            }
-            
-            // 顯示的內容
-            if let myLabel = cell.textLabel {
-                myLabel.text = 
-                "\(data[indexPath.section][indexPath.row])"
-            }
-            
-            return cell
-    }
-    
-    func numberOfSections(
-        in tableView: UITableView) -> Int {
-        return data.count
-    }
-    
-    func tableView(_ tableView: UITableView,
-                   titleForHeaderInSection section: Int) -> String? {
-        let title = section == 0 ? "DATA" : "DATA 2"
-        return title
-    }
-    
     func displayAllData() {
         self.magneticDB.queryData() { (tmp) -> () in
             for dict in tmp {
                 let x = dict["x"], y = dict["y"], angle = dict["angle"], mag = dict["mag"], date = dict["date"]
                 let cellLabel = "Point(\(x!), \(y!))(\(angle!)): \(mag!) - \(date!)"
-                self.data[0].append(cellLabel)
+                myTableViewController.data[0].append(cellLabel)
             }
         }
         self.myTableView.reloadData()
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        self.displayAllData()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -312,7 +258,9 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         self.locationManager.delegate = self
         self.locationManager.startUpdatingHeading()
         
+        let interval = TimeInterval(intervalTextField.text!)!
         self.motionManager.showsDeviceMovementDisplay = true
+        self.motionManager.deviceMotionUpdateInterval = interval
         self.motionManager.startDeviceMotionUpdates(using: CMAttitudeReferenceFrame.xMagneticNorthZVertical, to: OperationQueue.main) { motion, error in
             guard let attitude = motion?.attitude else {
                 return
@@ -331,7 +279,17 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
             self.magneticFieldZLabel.text = String(self.magZ!)
             self.magneticFieldNormalizedLabel.text = String(self.mag!)
             
-            self.motionManager.accelerometerUpdateInterval = 0
+            if self.recordWaySegmentedControl.selectedSegmentIndex == 1 && self.onlineUpdateSwitch.isOn {
+                if self.duration == -1.0 {
+                    if let duration = Double(self.periodTextField.text!) {
+                        self.duration = duration
+                        self.startTimer(duraction: self.duration)
+                    }
+                }
+                self.recordOnce()
+            }
+            
+            self.motionManager.accelerometerUpdateInterval = interval
             self.motionManager.startAccelerometerUpdates(to: OperationQueue.main) {
                 [weak self] (accelerometerData: CMAccelerometerData?, error: Error?) in
                 
@@ -381,9 +339,6 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
-        
-//        self.locationManager.stopUpdatingHeading()
-//        self.motionManager.stopDeviceMotionUpdates()
     }
     
     var heading: CGFloat? = nil
@@ -398,8 +353,8 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         self.angle = headingInteger
         self.headingLabel?.text = "\(headingInteger)"
 
-        if self.recordWaySegmentedControl.selectedSegmentIndex == 0 && headingArray[0]-1 <= headingInteger && headingArray[0]+1 >= headingInteger {
-                print("\(headingInteger)")
+        if self.recordWaySegmentedControl.selectedSegmentIndex == 0 && self.onlineUpdateSwitch.isOn && headingArray[0]-1 <= headingInteger && headingInteger <= headingArray[0]+1 {
+                self.debugLabel.text = "\(headingInteger)"
                 self.recordOnce()
                 headingArray = headingArray.shiftRight()
         }

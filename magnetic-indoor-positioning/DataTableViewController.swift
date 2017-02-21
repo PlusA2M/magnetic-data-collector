@@ -10,11 +10,14 @@ import UIKit
 
 class DataTableViewController: UITableViewController {
     
-    fileprivate var data = [[]]
+    var data = [[]]
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        self.tableView.delegate = self
+        self.tableView.dataSource = self
+        print("IN")
         // Uncomment the following line to preserve selection between presentations
         // self.clearsSelectionOnViewWillAppear = false
 
