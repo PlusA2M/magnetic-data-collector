@@ -261,6 +261,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate, URLSessionDel
         let interval = TimeInterval(intervalTextField.text!)!
         self.motionManager.showsDeviceMovementDisplay = true
         self.motionManager.deviceMotionUpdateInterval = interval
+        self.motionManager.magnetometerUpdateInterval = interval
         self.motionManager.startDeviceMotionUpdates(using: CMAttitudeReferenceFrame.xMagneticNorthZVertical, to: OperationQueue.main) { motion, error in
             guard let attitude = motion?.attitude else {
                 return
