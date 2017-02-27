@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0E0626AC1E58CCED0031496B /* ArrayExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E0626AB1E58CCED0031496B /* ArrayExtension.swift */; };
+		0E0626AC1E58CCED0031496B /* extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E0626AB1E58CCED0031496B /* extension.swift */; };
 		0E875C881E5B1DA400F27AC4 /* SQLite.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 0EC8C6A31E5A8582007CDF63 /* SQLite.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		0E875C8C1E5B7CF100F27AC4 /* DataTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E875C8B1E5B7CF100F27AC4 /* DataTableViewController.swift */; };
 		0EB2BE641E54159900A0D5E1 /* KNNDTW.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EB2BE631E54159900A0D5E1 /* KNNDTW.swift */; };
@@ -94,7 +94,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		0E0626AB1E58CCED0031496B /* ArrayExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArrayExtension.swift; sourceTree = "<group>"; };
+		0E0626AB1E58CCED0031496B /* extension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = extension.swift; sourceTree = "<group>"; };
 		0E875C8B1E5B7CF100F27AC4 /* DataTableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataTableViewController.swift; sourceTree = "<group>"; };
 		0EB2BE631E54159900A0D5E1 /* KNNDTW.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KNNDTW.swift; sourceTree = "<group>"; };
 		0EC8C6981E5A8582007CDF63 /* SQLite.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = SQLite.xcodeproj; path = "SQLite.swift-master/SQLite.xcodeproj"; sourceTree = "<group>"; };
@@ -161,7 +161,7 @@
 				0E875C8B1E5B7CF100F27AC4 /* DataTableViewController.swift */,
 				FADAD6341E1E546D00F0E069 /* magneticDB.swift */,
 				0EB2BE631E54159900A0D5E1 /* KNNDTW.swift */,
-				0E0626AB1E58CCED0031496B /* ArrayExtension.swift */,
+				0E0626AB1E58CCED0031496B /* extension.swift */,
 				0EF0AB3A1DD1E17B00990C89 /* Main.storyboard */,
 				0EF0AB3D1DD1E17B00990C89 /* Assets.xcassets */,
 				0EF0AB421DD1E17B00990C89 /* Info.plist */,
@@ -312,7 +312,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0E0626AC1E58CCED0031496B /* ArrayExtension.swift in Sources */,
+				0E0626AC1E58CCED0031496B /* extension.swift in Sources */,
 				0E875C8C1E5B7CF100F27AC4 /* DataTableViewController.swift in Sources */,
 				FADAD6351E1E546D00F0E069 /* magneticDB.swift in Sources */,
 				0EB2BE641E54159900A0D5E1 /* KNNDTW.swift in Sources */,

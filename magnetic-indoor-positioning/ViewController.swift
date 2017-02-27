@@ -22,8 +22,8 @@ class ViewController: UIViewController, CLLocationManagerDelegate, URLSessionDel
     
     var debugTimer: Timer?
     var duration: Double = -1.0
+    var recordCount: Int = -1
     
-    let magneticDB: MagneticDB = MagneticDB()
     var x: Int64?
     var y: Int64?
     var angle: Int64?
@@ -56,12 +56,39 @@ class ViewController: UIViewController, CLLocationManagerDelegate, URLSessionDel
     @IBOutlet weak var xTextField: UITextField!
     @IBOutlet weak var yTextField: UITextField!
     @IBOutlet weak var intervalTextField: UITextField!
-    @IBOutlet weak var periodTextField: UITextField!
+    @IBOutlet weak var durationTextField: UITextField!
     
-    @IBOutlet weak var onlineUpdateSwitch: UISwitch!
+    @IBOutlet weak var shouldRecordSwitch: UISwitch!
     
     @IBOutlet weak var dateLabel: UILabel!
     @IBOutlet weak var recordWaySegmentedControl: UISegmentedControl!
+    
+    
+    @IBAction func flushDataButtonTapped(_ sender: Any) {
+        let alert = UIAlertController(title: "FLUSH ALL DATA", message: "I know what am I fucking doing!", preferredStyle: .actionSheet)
+        alert.addAction(UIAlertAction(title: "DELETE!", style: .destructive, handler: { (alert: UIAlertAction!) in
+            _ = self.myTableViewController.flushAllData()
+        }))
+        alert.addAction(UIAlertAction(title: "RETURN", style: .default, handler: nil))
+        self.present(alert, animated: true, completion: nil)
+    }
+    
+    @IBAction func shouldRecordSwitchValueChanged(_ sender: UISwitch) {
+        self.xTextField.endEditing(true)
+        self.yTextField.endEditing(true)
+        self.intervalTextField.endEditing(true)
+        self.durationTextField.endEditing(true)
+        
+        var interval = TimeInterval(0)
+        if sender.isOn {
+            interval = (TimeInterval(self.intervalTextField.text!) == nil) ? 0 : TimeInterval(self.intervalTextField.text!)!
+        }
+
+        self.motionManager.deviceMotionUpdateInterval = interval
+        self.motionManager.gyroUpdateInterval = interval
+        self.motionManager.accelerometerUpdateInterval = interval
+        self.motionManager.magnetometerUpdateInterval = interval
+    }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "DataTableSegue" {
@@ -71,7 +98,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate, URLSessionDel
     }
 
     func startTimer(duraction: Double) {
-        if let duration = Double(periodTextField.text!) {
+        if let duration = Double(durationTextField.text!) {
             self.duration = duration
         }
         self.debugTimer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(self.updateTimer), userInfo: nil, repeats: true)
@@ -88,114 +115,13 @@ class ViewController: UIViewController, CLLocationManagerDelegate, URLSessionDel
     }
     
     func stopRecord() {
-        self.onlineUpdateSwitch.setOn(false, animated: true)
-        myTableViewController.data = [["FINISHED"]]
-        self.myTableView.reloadData()
+        self.shouldRecordSwitch.setOn(false, animated: true)
+        self.motionManager.deviceMotionUpdateInterval = 0
+        self.motionManager.gyroUpdateInterval = 0
+        self.motionManager.accelerometerUpdateInterval = 0
+        self.motionManager.magnetometerUpdateInterval = 0
     }
     
-    func startRecord() {
-        if let x = xTextField.text, let y = yTextField.text, let interval = intervalTextField.text {
-            guard let x = Int64(x), let y = Int64(y), let interval = TimeInterval(interval) else {
-                let alert = UIAlertController(title: "Error", message: "Please input X, Y and s", preferredStyle: .actionSheet)
-                alert.addAction(UIAlertAction(title: "Gotcha", style: .default, handler: nil))
-                self.present(alert, animated: true, completion: nil)
-                return
-            }
-            
-            self.locationManager.startUpdatingHeading()
-            self.motionManager.showsDeviceMovementDisplay = true
-            
-            self.x = x
-            self.y = y
-            xTextField.endEditing(true)
-            yTextField.endEditing(true)
-            intervalTextField.endEditing(true)
-            self.motionManager.deviceMotionUpdateInterval = interval
-            self.motionManager.startDeviceMotionUpdates(using: CMAttitudeReferenceFrame.xMagneticNorthZVertical, to: OperationQueue.main) { motion, error in
-                guard let attitude = motion?.attitude else {
-                    return
-                }
-
-                self.motionManager.accelerometerUpdateInterval = interval
-                self.motionManager.startAccelerometerUpdates(to: OperationQueue.main) {
-                    [weak self] (accelerometerData: CMAccelerometerData?, error: Error?) in
-                    
-                    let accelerometerX = Float((accelerometerData?.acceleration.x)!)
-                    let accelerometerY = Float((accelerometerData?.acceleration.y)!)
-                    let accelerometerZ = Float((accelerometerData?.acceleration.z)!)
-                    
-                    self?.accelerometerXLabel.text = "\(accelerometerX)"
-                    self?.accelerometerYLabel.text = "\(accelerometerY)"
-                    self?.accelerometerZLabel.text = "\(accelerometerZ)"
-                    //                print("\(accelerometerData?.acceleration)")
-                    
-                }
-                
-                //            print("\(motion?.magneticField.accuracy.hashValue)")
-                //            print("\(motion?.magneticField.field)")
-                
-                let roll = CGFloat(attitude.roll)
-                let pitch = CGFloat(attitude.pitch)
-                let yaw = self.heading ?? 0 // Pitch (x), Roll (y), Yaw (z)
-                //print(attitude)
-                
-                self.pitchLabel?.text = "\( (180 / M_PI) * (attitude.pitch) )"
-                self.rollLabel?.text = "\( (180 / M_PI) * (attitude.roll) )"
-                self.yawLabel?.text = "\( (180 / M_PI) * (attitude.yaw) )"
-
-                var diskTransform = CATransform3DIdentity
-                diskTransform.m34 = 1.0/500.0
-                diskTransform = CATransform3DRotate(diskTransform, roll, 0, 1, 0)
-                diskTransform = CATransform3DRotate(diskTransform, pitch, -1, 0, 0)
-                diskTransform = CATransform3DRotate(diskTransform, yaw, 0, 0, 1)
-                self.disk?.layer.transform = diskTransform
-                self.container?.layer.transform = diskTransform
-                
-                var labelTransform = CATransform3DIdentity
-                labelTransform.m34 = 1.0/500.0
-                labelTransform = CATransform3DRotate(labelTransform, yaw, 0, 0, -1)
-                if abs(roll) > CGFloat(M_PI_2) {
-                    labelTransform = CATransform3DRotate(labelTransform, CGFloat(M_PI), 0, -1, 0)
-                }
-                for label in self.labels ?? [] {
-                    label.layer.transform = labelTransform
-                }
-
-                guard let magneticField = motion?.magneticField else {
-                    return
-                }
-                
-                self.magX = Double(round(10000000*magneticField.field.x)/10000000)
-                self.magY = Double(round(10000000*magneticField.field.y)/10000000)
-                self.magZ = Double(round(10000000*magneticField.field.z)/10000000)
-                self.mag = sqrt(self.magX!*self.magX! + self.magY!*self.magY! + self.magZ!*self.magZ!)
-                
-                if (self.onlineUpdateSwitch.isOn) {
-                    let backgroundQueue = DispatchQueue.global(qos: .background)
-                    backgroundQueue.async {
-                        let _ = self.magneticDB.insertData(valueX: self.x!, valueY: self.y!, valueAngle: Int64(self.angle!), valueMagx: self.magX!, valueMagy: self.magY!, valueMagz: self.magZ!, valueMag: self.mag!, valueDate: self.dateString!)
-                    }
-                }
-                
-                self.magneticFieldXLabel.text = "\(self.magX!)"
-                self.magneticFieldYLabel.text = "\(self.magY!)"
-                self.magneticFieldZLabel.text = "\(self.magZ!)"
-                self.magneticFieldNormalizedLabel.text = "\(self.mag!)"
-                self.dateLabel.text = "\(self.dateString!)"
-
-                let cellLabel = "Point(\(self.x!), \(self.y!))(\(self.angle!)): \(self.mag!) - \(self.dateString!)"
-                self.myTableViewController.data[0].append(cellLabel)
-                self.myTableView.reloadData()
-                
-                let lastCellIndexPath = IndexPath(row: self.myTableViewController.data[0].count-1, section: 0)
-                self.myTableView.scrollToRow(at: lastCellIndexPath, at: .bottom, animated: false)
-                
-            }
-        } else {
-            print("xTextField or yTextField has error.")
-        }
-    }
-
     func recordOnce() {
         if let x = Int64(xTextField.text!), let y = Int64(yTextField.text!) {
             self.x = x
@@ -204,18 +130,10 @@ class ViewController: UIViewController, CLLocationManagerDelegate, URLSessionDel
             xTextField.endEditing(true)
             yTextField.endEditing(true)
             intervalTextField.endEditing(true)
+            durationTextField.endEditing(true)
                 
-            if (self.onlineUpdateSwitch.isOn) {
-                let backgroundQueue = DispatchQueue.global(qos: .background)
-                backgroundQueue.async {
-                    _ = self.magneticDB.insertData(valueX: self.x!, valueY: self.y!, valueAngle: Int64(self.angle!), valueMagx: self.magX!, valueMagy: self.magY!, valueMagz: self.magZ!, valueMag: self.mag!, valueDate: self.dateString!)
-                    let cellLabel = "Point(\(self.x!), \(self.y!))(\(self.angle!)): \(self.mag!) - \(self.dateString!)"
-                    self.myTableViewController.data[0].append(cellLabel)
-                    self.myTableView.reloadData()
-                    self.myTableView.setNeedsDisplay()
-                    let lastCellIndexPath = IndexPath(row: self.myTableViewController.data[0].count-1, section: 0)
-//                    self.myTableView.scrollToRow(at: lastCellIndexPath, at: .bottom, animated: false)
-                }
+            if (self.shouldRecordSwitch.isOn) {
+                    _ = self.myTableViewController.insertData(x: self.x!, y: self.y!, angle: Int64(self.angle!), magx: self.magX!, magy: self.magY!, magz: self.magZ!, mag: self.mag!, date: self.dateString!)
             }
         } else {
             let alert = UIAlertController(title: "Error", message: "Please input X, Y and s", preferredStyle: .actionSheet)
@@ -234,21 +152,10 @@ class ViewController: UIViewController, CLLocationManagerDelegate, URLSessionDel
         self.dateLabel.text = "\(self.dateString!)"
     }
     
-    func displayAllData() {
-        self.magneticDB.queryData() { (tmp) -> () in
-            for dict in tmp {
-                let x = dict["x"], y = dict["y"], angle = dict["angle"], mag = dict["mag"], date = dict["date"]
-                let cellLabel = "Point(\(x!), \(y!))(\(angle!)): \(mag!) - \(date!)"
-                myTableViewController.data[0].append(cellLabel)
-            }
-        }
-        self.myTableView.reloadData()
-    }
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.displayAllData()
+        self.myTableViewController.displayAllData()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -258,11 +165,10 @@ class ViewController: UIViewController, CLLocationManagerDelegate, URLSessionDel
         self.locationManager.delegate = self
         self.locationManager.startUpdatingHeading()
         
-        let interval = TimeInterval(intervalTextField.text!)!
-        self.motionManager.showsDeviceMovementDisplay = true
-        self.motionManager.deviceMotionUpdateInterval = interval
-        self.motionManager.magnetometerUpdateInterval = interval
         self.motionManager.startDeviceMotionUpdates(using: CMAttitudeReferenceFrame.xMagneticNorthZVertical, to: OperationQueue.main) { motion, error in
+
+            self.motionManager.showsDeviceMovementDisplay = true
+            
             guard let attitude = motion?.attitude else {
                 return
             }
@@ -280,17 +186,22 @@ class ViewController: UIViewController, CLLocationManagerDelegate, URLSessionDel
             self.magneticFieldZLabel.text = String(self.magZ!)
             self.magneticFieldNormalizedLabel.text = String(self.mag!)
             
-            if self.recordWaySegmentedControl.selectedSegmentIndex == 1 && self.onlineUpdateSwitch.isOn {
+            if self.recordCount == 0 {
+                self.stopRecord()
+                self.recordCount = -1
+            }
+            if self.recordWaySegmentedControl.selectedSegmentIndex == 1 && self.shouldRecordSwitch.isOn && self.duration != 0.0 {
                 if self.duration == -1.0 {
-                    if let duration = Double(self.periodTextField.text!) {
+                    if let duration = Double(self.durationTextField.text!), let interval = Double(self.intervalTextField.text!) {
                         self.duration = duration
                         self.startTimer(duraction: self.duration)
+                        self.recordCount = (interval == 0.0) ? Int(self.duration / 0.01) : Int(self.duration / interval)
                     }
                 }
+                self.recordCount -= 1
                 self.recordOnce()
             }
             
-            self.motionManager.accelerometerUpdateInterval = interval
             self.motionManager.startAccelerometerUpdates(to: OperationQueue.main) {
                 [weak self] (accelerometerData: CMAccelerometerData?, error: Error?) in
                 
@@ -354,7 +265,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate, URLSessionDel
         self.angle = headingInteger
         self.headingLabel?.text = "\(headingInteger)"
 
-        if self.recordWaySegmentedControl.selectedSegmentIndex == 0 && self.onlineUpdateSwitch.isOn && headingArray[0]-1 <= headingInteger && headingInteger <= headingArray[0]+1 {
+        if self.recordWaySegmentedControl.selectedSegmentIndex == 0 && self.shouldRecordSwitch.isOn && headingArray[0]-1 <= headingInteger && headingInteger <= headingArray[0]+1 {
                 self.debugLabel.text = "\(headingInteger)"
                 self.recordOnce()
                 headingArray = headingArray.shiftRight()

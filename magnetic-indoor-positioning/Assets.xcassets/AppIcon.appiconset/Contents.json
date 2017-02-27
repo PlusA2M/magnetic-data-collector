@@ -1,15 +1,13 @@
 {
   "images" : [
     {
-      "size" : "20x20",
       "idiom" : "iphone",
-      "filename" : "Logo@2x-2.png",
+      "size" : "20x20",
       "scale" : "2x"
     },
     {
-      "size" : "20x20",
       "idiom" : "iphone",
-      "filename" : "Logo@3x-2.png",
+      "size" : "20x20",
       "scale" : "3x"
     },
     {
@@ -25,13 +23,13 @@
     {
       "size" : "40x40",
       "idiom" : "iphone",
-      "filename" : "Logo@2x-1.png",
+      "filename" : "Logo 2.png",
       "scale" : "2x"
     },
     {
       "size" : "40x40",
       "idiom" : "iphone",
-      "filename" : "Logo@3x-1.png",
+      "filename" : "Logo 3.png",
       "scale" : "3x"
     },
     {

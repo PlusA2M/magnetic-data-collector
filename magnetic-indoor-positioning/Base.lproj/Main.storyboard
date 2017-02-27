@@ -97,6 +97,9 @@
                                     <constraint firstAttribute="width" constant="49" id="9kc-vh-SlQ"/>
                                     <constraint firstAttribute="height" constant="31" id="h7s-8Y-J5b"/>
                                 </constraints>
+                                <connections>
+                                    <action selector="shouldRecordSwitchValueChanged:" destination="BYZ-38-t0r" eventType="valueChanged" id="TFM-W0-GKB"/>
+                                </connections>
                             </switch>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="2017-02-21 12:33:33" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="OOn-sk-7tC">
                                 <rect key="frame" x="123" y="657" width="169" height="21"/>
@@ -153,8 +156,8 @@
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Period" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="8ij-OI-G5h">
-                                <rect key="frame" x="195" y="123" width="50" height="21"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Duration" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="8ij-OI-G5h">
+                                <rect key="frame" x="195" y="123" width="66" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
@@ -396,8 +399,8 @@
                                     <segue destination="oSV-BG-aUK" kind="embed" identifier="DataTableSegue" id="hre-pp-6Jz"/>
                                 </connections>
                             </containerView>
-                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="0" borderStyle="roundedRect" placeholder="s" textAlignment="natural" clearsOnBeginEditing="YES" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="bk8-eI-gas">
-                                <rect key="frame" x="194.66666666666674" y="94" width="50" height="30"/>
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="10" borderStyle="roundedRect" placeholder="s" textAlignment="natural" clearsOnBeginEditing="YES" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="bk8-eI-gas">
+                                <rect key="frame" x="195" y="94" width="66" height="30"/>
                                 <nil key="textColor"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                 <textInputTraits key="textInputTraits" keyboardType="decimalPad"/>
@@ -449,7 +452,18 @@
                             <constraint firstItem="Knb-B9-jJE" firstAttribute="top" secondItem="y3c-jy-aDJ" secondAttribute="bottom" constant="58" id="yCX-D7-cn0"/>
                         </constraints>
                     </view>
-                    <navigationItem key="navigationItem" title="Magnetic Record Tool" id="IRO-vP-DjX"/>
+                    <navigationItem key="navigationItem" title="Magnetic Record Tool" id="IRO-vP-DjX">
+                        <barButtonItem key="rightBarButtonItem" id="mr7-ZB-9ex">
+                            <button key="customView" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" id="ZqU-x8-ubJ">
+                                <rect key="frame" x="364" y="7" width="30" height="30"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <state key="normal" title="❌"/>
+                                <connections>
+                                    <action selector="flushDataButtonTapped:" destination="BYZ-38-t0r" eventType="touchUpInside" id="Jig-e2-raU"/>
+                                </connections>
+                            </button>
+                        </barButtonItem>
+                    </navigationItem>
                     <connections>
                         <outlet property="accelerometerXLabel" destination="Ny3-Dh-vz9" id="ihG-lR-ReS"/>
                         <outlet property="accelerometerYLabel" destination="ZXA-yp-XD4" id="lCW-sW-sdW"/>
@@ -458,17 +472,17 @@
                         <outlet property="dateLabel" destination="OOn-sk-7tC" id="IDR-FF-d9o"/>
                         <outlet property="debugLabel" destination="EDB-iz-9U6" id="Mcw-Dy-GMN"/>
                         <outlet property="disk" destination="wRz-CO-ufi" id="1Fb-wP-zPm"/>
+                        <outlet property="durationTextField" destination="bk8-eI-gas" id="rpp-Sw-Okf"/>
                         <outlet property="headingLabel" destination="gWx-5g-6MH" id="kRA-4L-rvF"/>
                         <outlet property="intervalTextField" destination="85Q-qX-Rnk" id="gye-TU-SJK"/>
                         <outlet property="magneticFieldNormalizedLabel" destination="LS0-id-C6Z" id="ko6-4o-8oy"/>
                         <outlet property="magneticFieldXLabel" destination="Ds0-1z-Ciz" id="usr-mK-ctO"/>
                         <outlet property="magneticFieldYLabel" destination="B2e-ao-Aoj" id="aLa-EV-aOX"/>
                         <outlet property="magneticFieldZLabel" destination="4QC-Cb-wwY" id="Gpz-qw-3vR"/>
-                        <outlet property="onlineUpdateSwitch" destination="ZRh-Uk-ogG" id="Hcn-tc-sKG"/>
-                        <outlet property="periodTextField" destination="bk8-eI-gas" id="CAR-Xw-r0f"/>
                         <outlet property="pitchLabel" destination="Tff-FA-KMK" id="nVZ-MK-SES"/>
                         <outlet property="recordWaySegmentedControl" destination="5QV-yZ-Eae" id="R57-G2-MWR"/>
                         <outlet property="rollLabel" destination="hCc-Cd-LSJ" id="an9-QL-oKv"/>
+                        <outlet property="shouldRecordSwitch" destination="ZRh-Uk-ogG" id="oYL-M9-PSN"/>
                         <outlet property="xTextField" destination="hP5-wn-ViT" id="5bD-HS-TtO"/>
                         <outlet property="yTextField" destination="vLI-Hk-PA4" id="Uua-8g-Fz6"/>
                         <outlet property="yawLabel" destination="EVG-6p-uPj" id="xlf-Um-QpM"/>

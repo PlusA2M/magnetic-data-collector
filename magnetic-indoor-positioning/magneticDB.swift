@@ -52,9 +52,10 @@ class MagneticDB {
         }
     }
     
-    func insertData(valueX: Int64, valueY: Int64, valueAngle: Int64, valueMagx: Double, valueMagy: Double, valueMagz: Double, valueMag: Double, valueDate: String) -> Int64? {
+    func insertData(x: Int64, y: Int64, angle: Int64, magx: Double, magy: Double, magz: Double, mag: Double, date: String) -> Int64? {
+        createTable()
         do {
-            let rowid = try db?.run(data.insert(x <- valueX, y <- valueY, angle <- valueAngle, magx <- valueMagx, magy <- valueMagy, magz <- valueMagz, mag <- valueMag, date <- valueDate))
+            let rowid = try db?.run(data.insert(self.x <- x, self.y <- y, self.angle <- angle, self.magx <- magx, self.magy <- magy, self.magz <- magz, self.mag <- mag, self.date <- date))
             print("inserted id: \(rowid!)")
             return rowid!
         } catch {
@@ -72,6 +73,7 @@ class MagneticDB {
                 var dict: Dictionary<String, String> = Dictionary()
                 for tmp in stmt {
 //                    print("\(tmp[date]) Point(\(tmp[x]), \(tmp[y])) at \(tmp[angle]): \(tmp[mag])")
+                    dict["id"] = String(tmp[id])
                     dict["date"] = tmp[date]
                     dict["x"] = String(tmp[x])
                     dict["y"] = String(tmp[y])
@@ -84,5 +86,28 @@ class MagneticDB {
             print("Query failed: \(error)")
         }
         completion(array)
+    }
+    
+    func deleteData(x:Int64, y:Int64, angle:Int64, mag:Double, date:String) {
+        // variable 'mag' is not being used
+        do {
+            let dataToDelete = data.filter(self.x == x && self.y == y && self.angle == angle && self.date == date)
+            print("\(dataToDelete)")
+            if let numberOfDeletedRow = try (db?.run(dataToDelete.delete())) {
+                print("Deleted \(numberOfDeletedRow) row(s) of data.")
+            }
+        } catch {
+            print("Delete failed: \(error)")
+        }
+    }
+    
+    func flushAllData() -> Bool {
+        do {
+            try db?.run(data.drop(ifExists: true))
+            return true
+        } catch {
+            print("Drop failed: \(error)")
+            return false
+        }
     }
 }

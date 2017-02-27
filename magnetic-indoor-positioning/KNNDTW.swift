@@ -97,8 +97,6 @@ open class KNNDTW: NSObject {
             }
         }
         
-        
-        
         //THIRD, we backtrack and find cost of optimal path
         var path = [[Int]]()
         var i = y.count-1
